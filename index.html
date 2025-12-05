@@ -2,12 +2,17 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 rx=%2220%22 fill=%22%233b82f6%22/><text x=%2250%22 y=%2270%22 font-family=%22Arial%22 font-weight=%22bold%22 font-size=%2260%22 text-anchor=%22middle%22 fill=%22white%22>M</text></svg>">
     <title>Memory Master</title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
 
         body {
             font-family: 'Inter', sans-serif;
@@ -15,6 +20,8 @@
             color: #e2e8f0;
             overflow-x: hidden;
             min-height: 100vh;
+            min-height: 100dvh;
+            touch-action: manipulation;
         }
 
         /* 3D Card Flip Effect */
@@ -26,8 +33,6 @@
             position: relative;
             width: 100%;
             height: 100%;
-            min-height: 80px;
-            min-width: 80px;
             transition: all 0.2s ease;
         }
 
@@ -41,10 +46,7 @@
             cursor: pointer;
         }
 
-        .card.flipped .card-inner {
-            transform: rotateY(180deg);
-        }
-
+        .card.flipped .card-inner,
         .card.matched .card-inner {
             transform: rotateY(180deg);
         }
@@ -55,7 +57,7 @@
 
         @keyframes pulse-match {
             0% { transform: scale(1); }
-            50% { transform: scale(1.1); }
+            50% { transform: scale(1.08); }
             100% { transform: scale(1); }
         }
 
@@ -65,11 +67,11 @@
             height: 100%;
             -webkit-backface-visibility: hidden;
             backface-visibility: hidden;
-            border-radius: 1rem;
+            border-radius: clamp(0.5rem, 2vw, 1rem);
             display: flex;
             align-items: center;
             justify-content: center;
-            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            box-shadow: 0 4px 15px -3px rgba(0, 0, 0, 0.2);
             font-weight: bold;
             user-select: none;
         }
@@ -85,6 +87,9 @@
             color: white;
             transform: rotateY(180deg);
             border: 2px solid rgba(255, 255, 255, 0.2);
+            padding: 4px;
+            overflow: hidden;
+            word-break: break-word;
         }
 
         .card-front.easy {
@@ -99,14 +104,15 @@
             background: linear-gradient(135deg, #ef4444, #dc2626);
         }
 
-        /* Dynamic font sizing for card content */
-        .content-emoji { font-size: 2.5rem; }
-        .content-text { font-size: 1.25rem; }
-        .content-word { font-size: 0.9rem; }
-
-        @media (max-width: 640px) {
-            .content-emoji { font-size: 1.75rem; }
-            .content-text { font-size: 1rem; }
+        /* Dynamic font sizing for card content - responsive */
+        .content-emoji { 
+            font-size: clamp(1.25rem, 4vw, 2.5rem); 
+        }
+        .content-text { 
+            font-size: clamp(0.875rem, 3vw, 1.25rem); 
+        }
+        .content-word { 
+            font-size: clamp(0.625rem, 2vw, 0.9rem); 
         }
 
         /* Shake animation for wrong match */
@@ -117,13 +123,12 @@
         @keyframes shake {
             10%, 90% { transform: translate3d(-1px, 0, 0); }
             20%, 80% { transform: translate3d(2px, 0, 0); }
-            30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
-            40%, 60% { transform: translate3d(4px, 0, 0); }
+            30%, 50%, 70% { transform: translate3d(-3px, 0, 0); }
+            40%, 60% { transform: translate3d(3px, 0, 0); }
         }
 
         .grid-container {
             display: grid;
-            gap: 0.75rem;
             margin: 0 auto;
             transition: all 0.3s ease;
         }
@@ -136,16 +141,6 @@
         @keyframes countdown-shrink {
             from { width: 100%; }
             to { width: 0%; }
-        }
-
-        /* Pulse animation for preview */
-        .preview-pulse {
-            animation: preview-pulse 2s infinite;
-        }
-
-        @keyframes preview-pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.7; }
         }
 
         /* Mode selection cards */
@@ -162,43 +157,80 @@
 
         .mode-card.selected {
             border-color: #fbbf24;
-            transform: scale(1.05);
+            transform: scale(1.02);
+        }
+
+        @media (max-width: 640px) {
+            .mode-card:hover {
+                transform: none;
+            }
+            .mode-card.selected {
+                transform: scale(1);
+                border-color: #fbbf24;
+                box-shadow: 0 0 0 2px #fbbf24;
+            }
         }
 
         /* Stats card glass effect */
         .glass-card {
-            background: rgba(30, 41, 59, 0.5);
+            background: rgba(30, 41, 59, 0.7);
             backdrop-filter: blur(10px);
             border: 1px solid rgba(255, 255, 255, 0.1);
         }
 
-        /* Confetti particles */
-        @keyframes fall {
-            to {
-                transform: translateY(100vh) rotate(720deg);
+        /* Responsive header stats */
+        .stat-item {
+            min-width: 50px;
+        }
+
+        /* Safe area for notched devices */
+        @supports (padding: max(0px)) {
+            body {
+                padding-left: max(0px, env(safe-area-inset-left));
+                padding-right: max(0px, env(safe-area-inset-right));
+                padding-bottom: max(0px, env(safe-area-inset-bottom));
             }
+        }
+
+        /* Ensure buttons are touch-friendly */
+        button {
+            min-height: 44px;
+            min-width: 44px;
+        }
+
+        /* Scrollbar styling */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(30, 41, 59, 0.5);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(100, 116, 139, 0.5);
+            border-radius: 3px;
         }
     </style>
 </head>
-<body class="flex flex-col min-h-screen">
+<body class="flex flex-col min-h-screen min-h-dvh">
 
     <!-- Mode Selection Screen -->
-    <div id="mode-selection" class="fixed inset-0 z-50 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex flex-col items-center justify-center p-8">
-        <div class="max-w-5xl w-full">
-            <div class="text-center mb-12">
-                <h1 class="text-6xl font-bold mb-4 bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent animate-pulse">
+    <div id="mode-selection" class="fixed inset-0 z-50 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex flex-col items-center justify-center p-4 sm:p-6 md:p-8 overflow-y-auto">
+        <div class="max-w-5xl w-full my-auto">
+            <div class="text-center mb-6 sm:mb-8 md:mb-12">
+                <h1 class="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-2 sm:mb-4 bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
                     Memory Master
                 </h1>
-                <p class="text-xl text-slate-400">Test your memory with increasingly challenging levels</p>
+                <p class="text-sm sm:text-base md:text-xl text-slate-400">Test your memory with increasingly challenging levels</p>
             </div>
 
-            <div class="grid grid-cols-3 gap-6 mb-8">
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 md:gap-6 mb-6 sm:mb-8">
                 <!-- Easy Mode Card -->
-                <div class="mode-card glass-card rounded-2xl p-6 text-center" data-mode="easy">
-                    <div class="text-5xl mb-4">🌱</div>
-                    <h3 class="text-2xl font-bold text-green-400 mb-2">Easy</h3>
-                    <p class="text-sm text-slate-300 mb-4">Relaxed preview time</p>
-                    <ul class="text-xs text-slate-400 space-y-1">
+                <div class="mode-card glass-card rounded-xl sm:rounded-2xl p-4 sm:p-5 md:p-6 text-center" data-mode="easy">
+                    <div class="text-3xl sm:text-4xl md:text-5xl mb-2 sm:mb-4">🌱</div>
+                    <h3 class="text-xl sm:text-2xl font-bold text-green-400 mb-1 sm:mb-2">Easy</h3>
+                    <p class="text-xs sm:text-sm text-slate-300 mb-2 sm:mb-4">Relaxed preview time</p>
+                    <ul class="text-xs text-slate-400 space-y-1 hidden sm:block">
                         <li>• Generous preview</li>
                         <li>• Simple patterns</li>
                         <li>• Forgiving mistakes</li>
@@ -206,11 +238,11 @@
                 </div>
 
                 <!-- Medium Mode Card -->
-                <div class="mode-card glass-card rounded-2xl p-6 text-center" data-mode="medium">
-                    <div class="text-5xl mb-4">⚡</div>
-                    <h3 class="text-2xl font-bold text-blue-400 mb-2">Medium</h3>
-                    <p class="text-sm text-slate-300 mb-4">Balanced challenge</p>
-                    <ul class="text-xs text-slate-400 space-y-1">
+                <div class="mode-card glass-card rounded-xl sm:rounded-2xl p-4 sm:p-5 md:p-6 text-center" data-mode="medium">
+                    <div class="text-3xl sm:text-4xl md:text-5xl mb-2 sm:mb-4">⚡</div>
+                    <h3 class="text-xl sm:text-2xl font-bold text-blue-400 mb-1 sm:mb-2">Medium</h3>
+                    <p class="text-xs sm:text-sm text-slate-300 mb-2 sm:mb-4">Balanced challenge</p>
+                    <ul class="text-xs text-slate-400 space-y-1 hidden sm:block">
                         <li>• Moderate preview</li>
                         <li>• Mixed content</li>
                         <li>• Standard difficulty</li>
@@ -218,11 +250,11 @@
                 </div>
 
                 <!-- Hard Mode Card -->
-                <div class="mode-card glass-card rounded-2xl p-6 text-center" data-mode="hard">
-                    <div class="text-5xl mb-4">🔥</div>
-                    <h3 class="text-2xl font-bold text-red-400 mb-2">Hard</h3>
-                    <p class="text-sm text-slate-300 mb-4">Test your limits</p>
-                    <ul class="text-xs text-slate-400 space-y-1">
+                <div class="mode-card glass-card rounded-xl sm:rounded-2xl p-4 sm:p-5 md:p-6 text-center" data-mode="hard">
+                    <div class="text-3xl sm:text-4xl md:text-5xl mb-2 sm:mb-4">🔥</div>
+                    <h3 class="text-xl sm:text-2xl font-bold text-red-400 mb-1 sm:mb-2">Hard</h3>
+                    <p class="text-xs sm:text-sm text-slate-300 mb-2 sm:mb-4">Test your limits</p>
+                    <ul class="text-xs text-slate-400 space-y-1 hidden sm:block">
                         <li>• Quick preview</li>
                         <li>• Complex patterns</li>
                         <li>• No room for errors</li>
@@ -230,75 +262,116 @@
                 </div>
             </div>
 
-            <div class="text-center">
-                <button id="start-game-btn" class="px-8 py-4 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white rounded-xl font-bold text-lg transition-all transform hover:scale-105 shadow-2xl disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+            <div class="text-center space-y-3">
+                <button id="start-game-btn" class="w-full sm:w-auto px-6 sm:px-8 py-3 sm:py-4 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white rounded-xl font-bold text-base sm:text-lg transition-all transform hover:scale-105 shadow-2xl disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100" disabled>
                     Select Difficulty to Start
                 </button>
-            </div>
-
-            <!-- Continue button if there's saved progress -->
-            <div id="continue-section" class="text-center mt-4 hidden">
-                <button id="continue-btn" class="px-6 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg text-sm font-medium transition-all">
-                    Continue from Level <span id="continue-level">1</span>
-                </button>
+                
+                <!-- Continue button if there's saved progress -->
+                <div id="continue-section" class="hidden">
+                    <button id="continue-btn" class="w-full sm:w-auto px-6 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg text-sm font-medium transition-all">
+                        Continue from Level <span id="continue-level">1</span>
+                    </button>
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- Game Header (Initially Hidden) -->
-    <header id="game-header" class="w-full px-4 py-3 hidden">
+    <!-- Game Header -->
+    <header id="game-header" class="w-full px-2 sm:px-4 py-2 sm:py-3 hidden flex-shrink-0">
         <div class="max-w-6xl mx-auto">
-            <div class="glass-card rounded-2xl p-4 flex items-center justify-between">
-                <div class="flex items-center gap-6">
-                    <div>
-                        <h1 class="text-2xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
-                            Memory Master
-                        </h1>
-                        <div class="text-xs text-slate-400 mt-1">
-                            <span id="mode-display" class="uppercase font-semibold">Easy</span> Mode
+            <div class="glass-card rounded-xl sm:rounded-2xl p-2 sm:p-3 md:p-4">
+                <!-- Mobile Layout -->
+                <div class="flex flex-col gap-2 sm:hidden">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h1 class="text-lg font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+                                Memory Master
+                            </h1>
+                            <div class="text-xs text-slate-400">
+                                <span id="mode-display-mobile" class="uppercase font-semibold">Easy</span> • Lvl <span id="level-display-mobile">1</span>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <button id="hint-btn-mobile" class="p-2 bg-amber-600/20 hover:bg-amber-600/30 text-amber-400 border border-amber-600/50 rounded-lg text-sm font-medium transition-all flex items-center gap-1 disabled:opacity-50">
+                                <span id="hints-left-mobile">3</span>💡
+                            </button>
+                            <button id="pause-btn-mobile" class="p-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg text-xs transition-all">
+                                ⏸
+                            </button>
+                            <button id="menu-btn-mobile" class="p-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg text-xs transition-all">
+                                ☰
+                            </button>
                         </div>
                     </div>
-
-                    <div class="flex gap-4">
-                        <div class="text-center">
-                            <div class="text-xs text-slate-400 uppercase">Level</div>
-                            <div class="text-2xl font-bold text-white" id="level-display">1</div>
+                    <div class="flex justify-between text-center bg-slate-800/50 rounded-lg p-2">
+                        <div class="stat-item">
+                            <div class="text-xs text-slate-400">Moves</div>
+                            <div class="text-lg font-bold text-white" id="moves-display-mobile">0</div>
                         </div>
-                        <div class="text-center">
-                            <div class="text-xs text-slate-400 uppercase">Moves</div>
-                            <div class="text-2xl font-bold text-white" id="moves-display">0</div>
+                        <div class="stat-item">
+                            <div class="text-xs text-slate-400">Time</div>
+                            <div class="text-lg font-bold text-white font-mono" id="time-display-mobile">00:00</div>
                         </div>
-                        <div class="text-center">
-                            <div class="text-xs text-slate-400 uppercase">Time</div>
-                            <div class="text-2xl font-bold text-white font-mono" id="time-display">00:00</div>
-                        </div>
-                        <div class="text-center">
-                            <div class="text-xs text-slate-400 uppercase">Best</div>
-                            <div class="text-xl font-bold text-yellow-400" id="best-moves">-</div>
+                        <div class="stat-item">
+                            <div class="text-xs text-slate-400">Best</div>
+                            <div class="text-lg font-bold text-yellow-400" id="best-moves-mobile">-</div>
                         </div>
                     </div>
                 </div>
 
-                <div class="flex items-center gap-3">
-                    <button id="hint-btn" class="px-4 py-2 bg-amber-600/20 hover:bg-amber-600/30 text-amber-400 border border-amber-600/50 rounded-lg text-sm font-medium transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9 9h.01M15 9h.01M8 13a4 4 0 0 0 8 0"/></svg>
-                        <span id="hints-left">3</span>
-                    </button>
-                    <button id="pause-btn" class="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg text-sm font-medium transition-all">
-                        Pause
-                    </button>
-                    <button id="menu-btn" class="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg text-sm font-medium transition-all">
-                        Menu
-                    </button>
+                <!-- Desktop/Tablet Layout -->
+                <div class="hidden sm:flex items-center justify-between">
+                    <div class="flex items-center gap-3 md:gap-6">
+                        <div>
+                            <h1 class="text-xl md:text-2xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+                                Memory Master
+                            </h1>
+                            <div class="text-xs text-slate-400 mt-1">
+                                <span id="mode-display" class="uppercase font-semibold">Easy</span> Mode
+                            </div>
+                        </div>
+
+                        <div class="flex gap-2 md:gap-4">
+                            <div class="text-center stat-item">
+                                <div class="text-xs text-slate-400 uppercase">Level</div>
+                                <div class="text-xl md:text-2xl font-bold text-white" id="level-display">1</div>
+                            </div>
+                            <div class="text-center stat-item">
+                                <div class="text-xs text-slate-400 uppercase">Moves</div>
+                                <div class="text-xl md:text-2xl font-bold text-white" id="moves-display">0</div>
+                            </div>
+                            <div class="text-center stat-item">
+                                <div class="text-xs text-slate-400 uppercase">Time</div>
+                                <div class="text-xl md:text-2xl font-bold text-white font-mono" id="time-display">00:00</div>
+                            </div>
+                            <div class="text-center stat-item">
+                                <div class="text-xs text-slate-400 uppercase">Best</div>
+                                <div class="text-lg md:text-xl font-bold text-yellow-400" id="best-moves">-</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center gap-2 md:gap-3">
+                        <button id="hint-btn" class="px-3 md:px-4 py-2 bg-amber-600/20 hover:bg-amber-600/30 text-amber-400 border border-amber-600/50 rounded-lg text-sm font-medium transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
+                            💡 <span id="hints-left">3</span>
+                        </button>
+                        <button id="pause-btn" class="px-3 md:px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg text-sm font-medium transition-all">
+                            Pause
+                        </button>
+                        <button id="menu-btn" class="px-3 md:px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg text-sm font-medium transition-all">
+                            Menu
+                        </button>
+                    </div>
                 </div>
             </div>
 
             <!-- Progress Bar for Preview Time -->
-            <div id="preview-bar-container" class="mt-3 hidden">
-                <div class="h-2 bg-slate-700 rounded-full overflow-hidden">
+            <div id="preview-bar-container" class="mt-2 sm:mt-3 hidden">
+                <div class="h-1.5 sm:h-2 bg-slate-700 rounded-full overflow-hidden">
                     <div id="preview-bar" class="h-full bg-gradient-to-r from-blue-400 to-purple-400 countdown-bar"></div>
                 </div>
-                <p class="text-center text-sm text-slate-400 mt-2">
+                <p class="text-center text-xs sm:text-sm text-slate-400 mt-1 sm:mt-2">
                     Memorize the cards! <span id="preview-countdown" class="font-bold text-white">5</span>s
                 </p>
             </div>
@@ -306,31 +379,39 @@
     </header>
 
     <!-- Game Board -->
-    <main class="flex-1 w-full flex items-center justify-center relative perspective-1000 min-h-0 overflow-hidden">
+    <main class="flex-1 w-full flex items-center justify-center relative perspective-1000 min-h-0 overflow-hidden p-2 sm:p-4">
         <div id="game-grid" class="grid-container">
             <!-- Cards generated by JS -->
         </div>
     </main>
 
     <!-- Overlay Modal -->
-    <div id="overlay" class="fixed inset-0 z-50 bg-slate-900/90 flex flex-col items-center justify-center text-center p-6 hidden">
-        <h2 id="overlay-title" class="text-5xl font-bold mb-2 bg-gradient-to-br from-white to-slate-400 bg-clip-text text-transparent">Level Complete!</h2>
-        <p id="overlay-msg" class="text-xl text-slate-300 mb-8">Ready for the next challenge?</p>
+    <div id="overlay" class="fixed inset-0 z-50 bg-slate-900/90 flex flex-col items-center justify-center text-center p-4 sm:p-6 hidden">
+        <h2 id="overlay-title" class="text-3xl sm:text-4xl md:text-5xl font-bold mb-2 bg-gradient-to-br from-white to-slate-400 bg-clip-text text-transparent">Level Complete!</h2>
+        <p id="overlay-msg" class="text-base sm:text-lg md:text-xl text-slate-300 mb-6 sm:mb-8">Ready for the next challenge?</p>
         
-        <div class="grid grid-cols-2 gap-4 mb-8 text-left bg-slate-800 p-6 rounded-xl border border-slate-700">
+        <div class="grid grid-cols-2 gap-4 mb-6 sm:mb-8 text-left bg-slate-800 p-4 sm:p-6 rounded-xl border border-slate-700 w-full max-w-xs">
             <div>
-                <p class="text-sm text-slate-400">Time</p>
-                <p class="text-2xl font-mono" id="summary-time">00:45</p>
+                <p class="text-xs sm:text-sm text-slate-400">Time</p>
+                <p class="text-xl sm:text-2xl font-mono" id="summary-time">00:45</p>
             </div>
             <div>
-                <p class="text-sm text-slate-400">Moves</p>
-                <p class="text-2xl" id="summary-moves">12</p>
+                <p class="text-xs sm:text-sm text-slate-400">Moves</p>
+                <p class="text-xl sm:text-2xl" id="summary-moves">12</p>
             </div>
         </div>
 
-        <button id="overlay-btn" class="group relative px-8 py-4 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-bold text-lg transition-all hover:scale-105 shadow-[0_0_20px_rgba(37,99,235,0.5)]">
+        <button id="overlay-btn" class="w-full max-w-xs sm:w-auto group relative px-6 sm:px-8 py-3 sm:py-4 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-bold text-base sm:text-lg transition-all hover:scale-105 shadow-[0_0_20px_rgba(37,99,235,0.5)]">
             Next Level
             <span class="absolute inset-0 rounded-xl ring-2 ring-white/20 group-hover:ring-white/40 transition-all"></span>
+        </button>
+    </div>
+
+    <!-- Pause Overlay -->
+    <div id="pause-overlay" class="fixed inset-0 z-40 bg-slate-900/95 flex flex-col items-center justify-center text-center p-4 hidden">
+        <h2 class="text-3xl sm:text-4xl font-bold mb-4 text-white">Game Paused</h2>
+        <button id="resume-btn" class="px-8 py-4 bg-green-600 hover:bg-green-500 text-white rounded-xl font-bold text-lg transition-all">
+            Resume
         </button>
     </div>
 
@@ -372,19 +453,16 @@
             baseRevealTime: 1000,
             minRevealTime: 400,
             maxPairs: 30,
-            // Base preview time per difficulty
             basePreviewTime: {
                 easy: 3000,
                 medium: 2000,
                 hard: 1000
             },
-            // Additional time per pair
             timePerPair: {
                 easy: 800,
                 medium: 500,
                 hard: 300
             },
-            // Mismatch reveal time
             mismatchRevealTime: {
                 easy: 1500,
                 medium: 1000,
@@ -396,10 +474,10 @@
          * Content Pools
          */
         const POOLS = {
-            emojis: ['🐶','🐱','🐭','🐹','🐰','🦊','🐻','🐼','🐨','🐯','🦁','🐮','🐷','🐸','🐵','🐔','🐧','🐦','🐤','🦆','🦅','🦉','🦇','🐺','🐗','🐴','🦄','🐝','🐛','🦋','🐌','🐞','🐜','🦟','🦗','🕷','🦂','🐢','🐍','🦎','🦖','🦕','🐙','🦑','🦐','🦞','🦀','🐡','🐠','🐟','🐬','🐳','🐋','🦈','🐊','🐅','🐆','🦓','🦍','🦧','🐘','🦛','🦏','🐪','🐫','🦒','🦘','🐃','🐂','🐄','🐎','🐖','🐏','🐑','🦙','🐐','🦌','🐕','🐩','🦮','🐕‍🦺','🐈','🐈‍⬛','🐓','🦃','🦚','🦜','🦢','🦩','🕊','🐇','🦝','🦨','🦡','🦦','🦥','🐁','🐀','🐿','🦔'],
+            emojis: ['🐶','🐱','🐭','🐹','🐰','🦊','🐻','🐼','🐨','🐯','🦁','🐮','🐷','🐸','🐵','🐔','🐧','🐦','🐤','🦆','🦅','🦉','🦇','🐺','🐗','🐴','🦄','🐝','🐛','🦋','🐌','🐞','🐜','🦟','🦗','🕷','🦂','🐢','🐍','🦎','🦖','🦕','🐙','🦑','🦐','🦞','🦀','🐡','🐠','🐟','🐬','🐳','🐋','🦈','🐊','🐅','🐆','🦓','🦍','🦧','🐘','🦛','🦏','🐪','🐫','🦒','🦘','🐃','🐂','🐄','🐎','🐖','🐏','🐑','🦙','🐐','🦌','🐕','🐩','🦮','🐈','🐓','🦃','🦚','🦜','🦢','🦩','🕊','🐇','🦝','🦨','🦡','🦦','🦥','🐁','🐀','🐿','🦔'],
             numbers: Array.from({length: 100}, (_, i) => i + ''),
             letters: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split(''),
-            symbols: ['★','☀','☁','☂','☃','☄','☎','☑','☒','☘','☙','☛','☚','☜','☝','☞','☟','☠','☡','☢','☣','☤','☥','☦','☧','☨','☩','☪','☫','☬','☭','☮','☯','☸','☹','☺','☻','☼','☽','☾','☿','♀','♁','♂','♃','♄','♅','♆','♇','♈','♉','♊','♋','♌','♍','♎','♏','♐','♑','♒','♓'],
+            symbols: ['★','☀','☁','☂','☃','☄','☎','☑','☒','☘','☛','☚','☜','☝','☞','☟','☠','☢','☣','☮','☯','☸','☹','☺','☻','☼','☽','☾','♀','♂','♈','♉','♊','♋','♌','♍','♎','♏','♐','♑','♒','♓'],
             words: ['RED','BLUE','GREEN','GOLD','JAVA','HTML','CSS','CODE','BYTE','BIT','BUG','WEB','NET','API','APP','DATA','DISK','FILE','HOST','LINK','LOAD','LOCK','LOOP','NODE','NULL','PATH','PING','PORT','ROOT','SAVE','SCAN','SEND','SITE','SOFT','SORT','SQL','SYNC','TAG','TASK','TEST','TEXT','TOOL','TYPE','UNIT','UNIX','USER','VOID','WIFI','XML','ZIP']
         };
 
@@ -409,8 +487,11 @@
         const els = {
             grid: document.getElementById('game-grid'),
             level: document.getElementById('level-display'),
+            levelMobile: document.getElementById('level-display-mobile'),
             moves: document.getElementById('moves-display'),
+            movesMobile: document.getElementById('moves-display-mobile'),
             time: document.getElementById('time-display'),
+            timeMobile: document.getElementById('time-display-mobile'),
             overlay: document.getElementById('overlay'),
             overlayTitle: document.getElementById('overlay-title'),
             overlayMsg: document.getElementById('overlay-msg'),
@@ -418,75 +499,94 @@
             summaryTime: document.getElementById('summary-time'),
             summaryMoves: document.getElementById('summary-moves'),
             hintBtn: document.getElementById('hint-btn'),
+            hintBtnMobile: document.getElementById('hint-btn-mobile'),
             hintsLeft: document.getElementById('hints-left'),
+            hintsLeftMobile: document.getElementById('hints-left-mobile'),
             bestMoves: document.getElementById('best-moves'),
-            modeDisplay: document.getElementById('mode-display')
+            bestMovesMobile: document.getElementById('best-moves-mobile'),
+            modeDisplay: document.getElementById('mode-display'),
+            modeDisplayMobile: document.getElementById('mode-display-mobile'),
+            pauseOverlay: document.getElementById('pause-overlay'),
+            resumeBtn: document.getElementById('resume-btn')
         };
 
         /**
          * Audio System (Oscillators)
          */
-        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        let audioCtx = null;
+        
+        function getAudioContext() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            return audioCtx;
+        }
         
         function playSound(type) {
-            if (audioCtx.state === 'suspended') audioCtx.resume();
-            
-            const osc = audioCtx.createOscillator();
-            const gainNode = audioCtx.createGain();
-            
-            osc.connect(gainNode);
-            gainNode.connect(audioCtx.destination);
-            
-            const now = audioCtx.currentTime;
+            try {
+                const ctx = getAudioContext();
+                if (ctx.state === 'suspended') ctx.resume();
+                
+                const osc = ctx.createOscillator();
+                const gainNode = ctx.createGain();
+                
+                osc.connect(gainNode);
+                gainNode.connect(ctx.destination);
+                
+                const now = ctx.currentTime;
 
-            if (type === 'flip') {
-                osc.type = 'sine';
-                osc.frequency.setValueAtTime(300, now);
-                osc.frequency.exponentialRampToValueAtTime(500, now + 0.1);
-                gainNode.gain.setValueAtTime(0.1, now);
-                gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
-                osc.start(now);
-                osc.stop(now + 0.1);
-            } else if (type === 'match') {
-                osc.type = 'triangle';
-                osc.frequency.setValueAtTime(440, now);
-                osc.frequency.setValueAtTime(554, now + 0.1);
-                osc.frequency.setValueAtTime(659, now + 0.2);
-                gainNode.gain.setValueAtTime(0.1, now);
-                gainNode.gain.linearRampToValueAtTime(0, now + 0.4);
-                osc.start(now);
-                osc.stop(now + 0.4);
-            } else if (type === 'wrong') {
-                osc.type = 'sawtooth';
-                osc.frequency.setValueAtTime(150, now);
-                osc.frequency.linearRampToValueAtTime(100, now + 0.2);
-                gainNode.gain.setValueAtTime(0.1, now);
-                gainNode.gain.linearRampToValueAtTime(0, now + 0.3);
-                osc.start(now);
-                osc.stop(now + 0.3);
-            } else if (type === 'win') {
-                osc.type = 'square';
-                osc.frequency.setValueAtTime(523.25, now);
-                osc.frequency.setValueAtTime(659.25, now + 0.1);
-                osc.frequency.setValueAtTime(783.99, now + 0.2);
-                osc.frequency.setValueAtTime(1046.50, now + 0.3);
-                gainNode.gain.setValueAtTime(0.1, now);
-                gainNode.gain.exponentialRampToValueAtTime(0.001, now + 0.6);
-                osc.start(now);
-                osc.stop(now + 0.6);
+                if (type === 'flip') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(300, now);
+                    osc.frequency.exponentialRampToValueAtTime(500, now + 0.1);
+                    gainNode.gain.setValueAtTime(0.08, now);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+                    osc.start(now);
+                    osc.stop(now + 0.1);
+                } else if (type === 'match') {
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(440, now);
+                    osc.frequency.setValueAtTime(554, now + 0.1);
+                    osc.frequency.setValueAtTime(659, now + 0.2);
+                    gainNode.gain.setValueAtTime(0.08, now);
+                    gainNode.gain.linearRampToValueAtTime(0, now + 0.4);
+                    osc.start(now);
+                    osc.stop(now + 0.4);
+                } else if (type === 'wrong') {
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(150, now);
+                    osc.frequency.linearRampToValueAtTime(100, now + 0.2);
+                    gainNode.gain.setValueAtTime(0.08, now);
+                    gainNode.gain.linearRampToValueAtTime(0, now + 0.3);
+                    osc.start(now);
+                    osc.stop(now + 0.3);
+                } else if (type === 'win') {
+                    osc.type = 'square';
+                    osc.frequency.setValueAtTime(523.25, now);
+                    osc.frequency.setValueAtTime(659.25, now + 0.1);
+                    osc.frequency.setValueAtTime(783.99, now + 0.2);
+                    osc.frequency.setValueAtTime(1046.50, now + 0.3);
+                    gainNode.gain.setValueAtTime(0.08, now);
+                    gainNode.gain.exponentialRampToValueAtTime(0.001, now + 0.6);
+                    osc.start(now);
+                    osc.stop(now + 0.6);
+                }
+            } catch (e) {
+                // Audio not supported
             }
         }
 
         function confetti() {
             const colors = ['#fbbf24', '#f59e0b', '#ef4444', '#3b82f6', '#8b5cf6', '#34d399'];
-            for (let i = 0; i < 100; i++) {
+            const count = window.innerWidth < 640 ? 50 : 100;
+            for (let i = 0; i < count; i++) {
                 const particle = document.createElement('div');
                 particle.style.cssText = `
                     position: fixed;
                     left: ${Math.random() * 100}vw;
                     top: -10px;
-                    width: 8px;
-                    height: 8px;
+                    width: ${window.innerWidth < 640 ? 6 : 8}px;
+                    height: ${window.innerWidth < 640 ? 6 : 8}px;
                     background: ${colors[Math.floor(Math.random() * colors.length)]};
                     border-radius: 50%;
                     pointer-events: none;
@@ -508,6 +608,41 @@
         }
 
         /**
+         * Update display elements (handles both mobile and desktop)
+         */
+        function updateDisplays() {
+            const level = STATE.level;
+            const moves = STATE.moves;
+            const hints = STATE.hints;
+            const mode = STATE.difficulty.toUpperCase();
+            
+            if (els.level) els.level.textContent = level;
+            if (els.levelMobile) els.levelMobile.textContent = level;
+            if (els.moves) els.moves.textContent = moves;
+            if (els.movesMobile) els.movesMobile.textContent = moves;
+            if (els.hintsLeft) els.hintsLeft.textContent = hints;
+            if (els.hintsLeftMobile) els.hintsLeftMobile.textContent = hints;
+            if (els.modeDisplay) els.modeDisplay.textContent = mode;
+            if (els.modeDisplayMobile) els.modeDisplayMobile.textContent = mode;
+        }
+
+        function updateTimeDisplay(timeStr) {
+            if (els.time) els.time.textContent = timeStr;
+            if (els.timeMobile) els.timeMobile.textContent = timeStr;
+        }
+
+        function updateBestDisplay(best) {
+            const val = best || '-';
+            if (els.bestMoves) els.bestMoves.textContent = val;
+            if (els.bestMovesMobile) els.bestMovesMobile.textContent = val;
+        }
+
+        function setHintButtonsDisabled(disabled) {
+            if (els.hintBtn) els.hintBtn.disabled = disabled;
+            if (els.hintBtnMobile) els.hintBtnMobile.disabled = disabled;
+        }
+
+        /**
          * Core Logic
          */
         
@@ -520,7 +655,9 @@
             const continueBtn = document.getElementById('continue-btn');
             const continueLevel = document.getElementById('continue-level');
             const menuBtn = document.getElementById('menu-btn');
+            const menuBtnMobile = document.getElementById('menu-btn-mobile');
             const pauseBtn = document.getElementById('pause-btn');
+            const pauseBtnMobile = document.getElementById('pause-btn-mobile');
             
             // Check for saved progress
             if (savedProgress.level && savedProgress.level > 1) {
@@ -529,6 +666,15 @@
                 STATE.level = savedProgress.level;
                 STATE.hints = savedProgress.hints || 3;
                 STATE.difficulty = savedProgress.difficulty || 'easy';
+                
+                // Pre-select the saved difficulty
+                modeCards.forEach(c => {
+                    if (c.dataset.mode === STATE.difficulty) {
+                        c.classList.add('selected');
+                        startBtn.disabled = false;
+                        startBtn.textContent = `Start ${STATE.difficulty.charAt(0).toUpperCase() + STATE.difficulty.slice(1)} Mode`;
+                    }
+                });
             }
             
             // Mode card selection
@@ -539,35 +685,6 @@
                     STATE.difficulty = this.dataset.mode;
                     startBtn.disabled = false;
                     startBtn.textContent = `Start ${this.dataset.mode.charAt(0).toUpperCase() + this.dataset.mode.slice(1)} Mode`;
-
-                    // Update preview text to reinforce difficulty messaging
-                    const descriptions = {
-                        easy: {
-                            title: 'Easy',
-                            message: 'Relaxed preview time',
-                            bullets: ['• Generous preview', '• Simple patterns', '• Forgiving mistakes']
-                        },
-                        medium: {
-                            title: 'Medium',
-                            message: 'Balanced challenge',
-                            bullets: ['• Moderate preview', '• Mixed content', '• Standard difficulty']
-                        },
-                        hard: {
-                            title: 'Hard',
-                            message: 'Test your limits',
-                            bullets: ['• Quick preview', '• Complex patterns', '• No room for errors']
-                        }
-                    };
-
-                    const selected = descriptions[this.dataset.mode];
-                    if (selected) {
-                        const titleEl = this.querySelector('h3');
-                        const messageEl = this.querySelector('p');
-                        const bulletEls = this.querySelectorAll('ul li');
-                        titleEl.textContent = selected.title;
-                        messageEl.textContent = selected.message;
-                        bulletEls.forEach((li, idx) => li.textContent = selected.bullets[idx]);
-                    }
                 });
             });
             
@@ -579,7 +696,7 @@
                 saveProgress();
                 modeSelection.classList.add('hidden');
                 gameHeader.classList.remove('hidden');
-                els.modeDisplay.textContent = STATE.difficulty.toUpperCase();
+                updateDisplays();
                 startLevel(1);
             });
             
@@ -588,61 +705,66 @@
                 STATE.gameStarted = true;
                 modeSelection.classList.add('hidden');
                 gameHeader.classList.remove('hidden');
-                els.modeDisplay.textContent = STATE.difficulty.toUpperCase();
+                updateDisplays();
                 startLevel(STATE.level);
             });
             
-            // Menu button
-            menuBtn.addEventListener('click', () => {
+            // Menu buttons (both desktop and mobile)
+            const handleMenu = () => {
                 if (confirm('Return to menu? Current progress will be saved.')) {
                     clearInterval(STATE.timerInterval);
                     clearInterval(STATE.previewInterval);
                     STATE.isPaused = false;
-                    pauseBtn.textContent = 'Pause';
+                    els.pauseOverlay.classList.add('hidden');
                     STATE.gameStarted = false;
                     modeSelection.classList.remove('hidden');
                     gameHeader.classList.add('hidden');
                     els.grid.innerHTML = '';
                 }
-            });
+            };
+            menuBtn.addEventListener('click', handleMenu);
+            menuBtnMobile.addEventListener('click', handleMenu);
             
-            // Pause button
-            pauseBtn.addEventListener('click', () => {
-                if (STATE.isPaused) {
-                    STATE.isPaused = false;
-                    pauseBtn.textContent = 'Pause';
-                    STATE.startTime = Date.now() - STATE.pausedTime;
-                    STATE.timerInterval = setInterval(updateTimer, 1000);
-                } else {
-                    STATE.isPaused = true;
-                    pauseBtn.textContent = 'Resume';
-                    STATE.pausedTime = Date.now() - STATE.startTime;
-                    clearInterval(STATE.timerInterval);
-                }
+            // Pause buttons
+            const handlePause = () => {
+                if (!STATE.isGameActive) return;
+                STATE.isPaused = true;
+                STATE.pausedTime = Date.now() - STATE.startTime;
+                clearInterval(STATE.timerInterval);
+                els.pauseOverlay.classList.remove('hidden');
+            };
+            pauseBtn.addEventListener('click', handlePause);
+            pauseBtnMobile.addEventListener('click', handlePause);
+            
+            // Resume button
+            els.resumeBtn.addEventListener('click', () => {
+                STATE.isPaused = false;
+                els.pauseOverlay.classList.add('hidden');
+                STATE.startTime = Date.now() - STATE.pausedTime;
+                STATE.timerInterval = setInterval(updateTimer, 1000);
             });
             
             els.overlayBtn.addEventListener('click', nextLevel);
-            els.hintBtn.addEventListener('click', useHint);
+            
+            // Hint buttons
+            const handleHint = () => useHint();
+            els.hintBtn.addEventListener('click', handleHint);
+            els.hintBtnMobile.addEventListener('click', handleHint);
+            
+            // Handle orientation change
+            window.addEventListener('orientationchange', () => {
+                setTimeout(resizeGrid, 100);
+            });
         }
 
         function getPairsCount(level, difficulty) {
-            // Start simple: Level 1 should always be 4 cards total (= 2 pairs)
-            // Then ramp up gradually per mode.
-            //
-            // Easy: slowest growth (more forgiving)
-            // Medium: steady growth
-            // Hard: fastest growth
             const curves = {
-                // L1:2, L2:2, L3:3, L4:3, L5:4 ...
                 easy: 2 + Math.floor((level - 1) / 2),
-                // L1:2, L2:3, L3:3, L4:4, L5:4, L6:5 ...
                 medium: 2 + Math.floor(level / 2),
-                // L1:2, L2:4, L3:5, L4:7, L5:8 ...
                 hard: 2 + Math.floor(level * 1.5)
             };
 
             const base = curves[difficulty] ?? curves.easy;
-            // Safety: never less than 2 pairs
             return Math.min(Math.max(base, 2), CONFIG.maxPairs);
         }
 
@@ -651,7 +773,7 @@
 
             switch (difficulty) {
                 case 'easy':
-                    pool = POOLS.emojis.slice(0, 36); // only simple emoji pairs
+                    pool = POOLS.emojis.slice(0, 36);
                     break;
                 case 'medium':
                     pool = [...POOLS.emojis.slice(0, 40), ...POOLS.numbers.slice(0, 30), ...POOLS.letters];
@@ -672,21 +794,43 @@
                     selected.push(pool[idx]);
                 }
                 if (usedIndices.size >= pool.length) {
-                    usedIndices.clear(); // Allow duplicates if exhausted
+                    usedIndices.clear();
                 }
             }
             return selected;
         }
 
         function calculateGrid(totalCards) {
-            let cols = Math.ceil(Math.sqrt(totalCards));
-            let rows = Math.ceil(totalCards / cols);
+            const isPortrait = window.innerHeight > window.innerWidth;
+            const isMobile = window.innerWidth < 640;
             
-            if (window.innerWidth > window.innerHeight) {
-                while (cols < rows * 1.5) {
-                    cols++;
-                    rows = Math.ceil(totalCards / cols);
+            let cols, rows;
+            
+            if (isMobile && isPortrait) {
+                // Mobile portrait: prefer more rows than columns
+                cols = Math.ceil(Math.sqrt(totalCards * 0.6));
+                rows = Math.ceil(totalCards / cols);
+            } else if (isMobile && !isPortrait) {
+                // Mobile landscape: prefer more columns
+                cols = Math.ceil(Math.sqrt(totalCards * 1.5));
+                rows = Math.ceil(totalCards / cols);
+            } else {
+                // Tablet/Desktop
+                cols = Math.ceil(Math.sqrt(totalCards));
+                rows = Math.ceil(totalCards / cols);
+                
+                if (window.innerWidth > window.innerHeight) {
+                    while (cols < rows * 1.4 && cols < totalCards) {
+                        cols++;
+                        rows = Math.ceil(totalCards / cols);
+                    }
                 }
+            }
+            
+            // Ensure we have enough cells
+            while (cols * rows < totalCards) {
+                if (cols <= rows) cols++;
+                else rows++;
             }
             
             return { rows, cols };
@@ -707,13 +851,10 @@
             STATE.isProcessing = true;  
             STATE.isPaused = false;
             
-            els.level.textContent = STATE.level;
-            els.moves.textContent = '0';
-            els.time.textContent = '00:00';
-            els.time.classList.remove('text-red-500');
+            updateDisplays();
+            updateTimeDisplay('00:00');
             els.overlay.classList.add('hidden');
-            els.hintBtn.disabled = STATE.hints <= 0;
-            els.hintsLeft.textContent = STATE.hints;
+            setHintButtonsDisabled(STATE.hints <= 0);
             updateHighScoreDisplay();
 
             STATE.totalPairs = getPairsCount(lvl, STATE.difficulty);
@@ -740,9 +881,11 @@
             const previewCountdown = document.getElementById('preview-countdown');
             
             previewBarContainer.classList.remove('hidden');
-            previewBar.style.animationDuration = `${previewDuration}ms`;
+            previewBar.style.animation = 'none';
+            previewBar.offsetHeight; // Trigger reflow
+            previewBar.style.animation = `countdown-shrink ${previewDuration}ms linear forwards`;
             
-            const revealDelay = Math.min(50, 1000 / STATE.cards.length);
+            const revealDelay = Math.min(30, 800 / STATE.cards.length);
             STATE.cards.forEach((card, index) => {
                 setTimeout(() => {
                     card.classList.add('flipped');
@@ -757,17 +900,20 @@
             
             STATE.previewInterval = setInterval(() => {
                 remaining--;
-                previewCountdown.textContent = remaining;
+                previewCountdown.textContent = Math.max(0, remaining);
                 if (remaining <= 3 && remaining > 0) {
-                    const osc = audioCtx.createOscillator();
-                    const gn = audioCtx.createGain();
-                    osc.connect(gn);
-                    gn.connect(audioCtx.destination);
-                    osc.frequency.setValueAtTime(600 + (remaining * 100), audioCtx.currentTime);
-                    gn.gain.setValueAtTime(0.03, audioCtx.currentTime);
-                    gn.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.1);
-                    osc.start();
-                    osc.stop(audioCtx.currentTime + 0.1);
+                    try {
+                        const ctx = getAudioContext();
+                        const osc = ctx.createOscillator();
+                        const gn = ctx.createGain();
+                        osc.connect(gn);
+                        gn.connect(ctx.destination);
+                        osc.frequency.setValueAtTime(600 + (remaining * 100), ctx.currentTime);
+                        gn.gain.setValueAtTime(0.02, ctx.currentTime);
+                        gn.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.1);
+                        osc.start();
+                        osc.stop(ctx.currentTime + 0.1);
+                    } catch(e) {}
                 }
                 if (remaining <= 0) {
                     clearInterval(STATE.previewInterval);
@@ -778,7 +924,7 @@
                 clearInterval(STATE.previewInterval);
                 previewBarContainer.classList.add('hidden');
                 
-                const hideDelay = Math.min(50, 1000 / STATE.cards.length);
+                const hideDelay = Math.min(30, 800 / STATE.cards.length);
                 STATE.cards.forEach((card, index) => {
                     setTimeout(() => {
                         card.classList.remove('flipped');
@@ -821,6 +967,11 @@
                 `;
                 
                 card.addEventListener('click', () => handleCardClick(card));
+                card.addEventListener('touchend', (e) => {
+                    e.preventDefault();
+                    handleCardClick(card);
+                }, { passive: false });
+                
                 els.grid.appendChild(card);
                 STATE.cards.push(card);
             });
@@ -838,7 +989,7 @@
 
             if (STATE.flippedCards.length === 2) {
                 STATE.moves++;
-                els.moves.textContent = STATE.moves;
+                updateDisplays();
                 checkForMatch();
             }
         }
@@ -907,7 +1058,6 @@
                 card.style.order = Math.floor(Math.random() * 1000);
             });
             
-            // Reset order after shuffle animation
             setTimeout(() => {
                 unmatched.forEach(card => {
                     card.style.order = '';
@@ -920,14 +1070,13 @@
 
             STATE.hints--;
             saveProgress();
-            els.hintsLeft.textContent = STATE.hints;
-            els.hintBtn.disabled = true;
+            updateDisplays();
+            setHintButtonsDisabled(true);
 
             const cards = Array.from(els.grid.children);
             const unmatched = cards.filter(c => !c.classList.contains('matched'));
             if (unmatched.length < 2) return;
 
-            // Find first unmatched pair
             const idCounts = {};
             unmatched.forEach(c => idCounts[c.dataset.id] = (idCounts[c.dataset.id] || 0) + 1);
             const targetId = Object.keys(idCounts).find(id => idCounts[id] === 2);
@@ -940,7 +1089,7 @@
             
             setTimeout(() => {
                 pair.forEach(c => c.classList.remove('flipped'));
-                if (STATE.hints > 0) els.hintBtn.disabled = false;
+                if (STATE.hints > 0) setHintButtonsDisabled(false);
             }, 1500);
         }
 
@@ -950,7 +1099,7 @@
             const elapsed = Math.floor((now - STATE.startTime) / 1000);
             const minutes = Math.floor(elapsed / 60).toString().padStart(2, '0');
             const seconds = (elapsed % 60).toString().padStart(2, '0');
-            els.time.textContent = `${minutes}:${seconds}`;
+            updateTimeDisplay(`${minutes}:${seconds}`);
         }
 
         function levelComplete() {
@@ -958,7 +1107,6 @@
             playSound('win');
             confetti();
             
-            // Update High Score
             const currentScore = STATE.moves;
             const bestForLevel = STATE.highScores[`${STATE.difficulty}-${STATE.level}`];
             if (!bestForLevel || currentScore < bestForLevel) {
@@ -967,7 +1115,7 @@
             }
 
             els.summaryMoves.textContent = STATE.moves;
-            els.summaryTime.textContent = els.time.textContent;
+            els.summaryTime.textContent = els.time ? els.time.textContent : els.timeMobile.textContent;
             els.overlayTitle.textContent = `Level ${STATE.level} Complete!`;
             els.overlayMsg.textContent = "Excellent memory!";
             els.overlayBtn.textContent = "Next Level";
@@ -979,14 +1127,14 @@
 
         function nextLevel() {
             STATE.hints = Math.min(STATE.hints + 1, 5);
-            els.hintsLeft.textContent = STATE.hints;
-            els.hintBtn.disabled = false;
+            updateDisplays();
+            setHintButtonsDisabled(false);
             startLevel(STATE.level + 1);
         }
 
         function updateHighScoreDisplay() {
             const best = STATE.highScores[`${STATE.difficulty}-${STATE.level}`];
-            els.bestMoves.textContent = best || '-';
+            updateBestDisplay(best);
         }
 
         function resizeGrid() {
@@ -998,28 +1146,59 @@
             
             const header = document.getElementById('game-header');
             const headerHeight = header && !header.classList.contains('hidden') ? header.offsetHeight : 0;
-            const padding = 40;
-            const availHeight = window.innerHeight - headerHeight - padding;
-            const availWidth = Math.min(window.innerWidth - padding, 1200);
+            
+            // More padding on mobile for touch targets
+            const isMobile = window.innerWidth < 640;
+            const padding = isMobile ? 16 : 32;
+            const gap = isMobile ? 6 : 10;
+            
+            const availHeight = window.innerHeight - headerHeight - padding * 2;
+            const availWidth = window.innerWidth - padding * 2;
 
-            const gap = 12;
             const maxCardHeight = (availHeight - (rows - 1) * gap) / rows;
             const maxCardWidth = (availWidth - (cols - 1) * gap) / cols;
             
             let cardSize = Math.min(maxCardHeight, maxCardWidth);
-            cardSize = Math.max(cardSize, 60);
-            cardSize = Math.min(cardSize, 140);
+            
+            // Ensure minimum touch target size on mobile
+            const minSize = isMobile ? 48 : 60;
+            const maxSize = isMobile ? 100 : 140;
+            
+            cardSize = Math.max(cardSize, minSize);
+            cardSize = Math.min(cardSize, maxSize);
             
             els.grid.style.gridTemplateColumns = `repeat(${cols}, ${cardSize}px)`;
             els.grid.style.gridTemplateRows = `repeat(${rows}, ${cardSize}px)`;
             els.grid.style.gap = `${gap}px`;
             els.grid.style.width = `${cols * cardSize + (cols - 1) * gap}px`;
             els.grid.style.height = `${rows * cardSize + (rows - 1) * gap}px`;
+            
+            // Adjust font size based on card size
+            cards.forEach(card => {
+                const back = card.querySelector('.card-back');
+                if (back) {
+                    const baseFontSize = cardSize * 0.4;
+                    if (back.classList.contains('content-emoji')) {
+                        back.style.fontSize = `${Math.min(baseFontSize * 1.2, cardSize * 0.5)}px`;
+                    } else if (back.classList.contains('content-word')) {
+                        back.style.fontSize = `${Math.min(baseFontSize * 0.5, cardSize * 0.25)}px`;
+                    } else {
+                        back.style.fontSize = `${Math.min(baseFontSize, cardSize * 0.35)}px`;
+                    }
+                }
+            });
         }
 
         // Init
         initGame();
         window.addEventListener('resize', resizeGrid);
+        
+        // Prevent pull-to-refresh on mobile
+        document.body.addEventListener('touchmove', function(e) {
+            if (e.target.closest('#game-grid')) {
+                e.preventDefault();
+            }
+        }, { passive: false });
     </script>
 </body>
 </html>
